@@ -46,7 +46,8 @@ fun MarkdownRenderer(
     markdown: String,
     onImageClick: (String) -> Unit
 ) {
-    val blocks = remember(markdown) { parseMarkdown(markdown) }
+    val processedMarkdown = remember(markdown) { preprocessLatex(markdown) }
+    val blocks = remember(processedMarkdown) { parseMarkdown(processedMarkdown) }
     Column {
         blocks.forEach { block ->
             when (block) {
@@ -113,16 +114,59 @@ fun MarkdownRenderer(
                     )
                 }
                 is MdBlock.CodeBlock -> {
-                    Text(
-                        text = block.text,
-                        style = MaterialTheme.typography.bodySmall,
-                        fontFamily = FontFamily.Monospace
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                        shape = MaterialTheme.shapes.small
+                    ) {
+                        Text(
+                            text = block.text,
+                            style = MaterialTheme.typography.bodySmall,
+                            fontFamily = FontFamily.Monospace,
+                            modifier = Modifier.padding(8.dp)
+                        )
+                    }
+                }
+                is MdBlock.LatexBlock -> {
+                    LatexFormula(
+                        latex = block.latex,
+                        isInline = false,
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             }
             Spacer(modifier = Modifier.height(6.dp))
         }
     }
+}
+
+private fun preprocessLatex(markdown: String): String {
+    var processed = markdown
+    
+    // Replace \[ ... \] (display math) with $$...$$
+    processed = processed.replace(Regex("""\\\["""), "$$")
+    processed = processed.replace(Regex("""\\\]"""), "$$")
+    
+    // Replace block LaTeX $$...$$ with placeholder
+    val blockLatexRegex = Regex("""\$\$([^\$]+?)\$\$""", RegexOption.DOT_MATCHES_ALL)
+    val blockMatches = blockLatexRegex.findAll(processed).toList()
+    blockMatches.reversed().forEach { match ->
+        val placeholder = "%%%LATEX_BLOCK_${match.range.first}%%%"
+        processed = processed.replaceRange(match.range, placeholder)
+    }
+    
+    // Replace inline LaTeX $...$ with code syntax `...`
+    val inlineLatexRegex = Regex("""\$([^\$\n]+)\$""")
+    processed = inlineLatexRegex.replace(processed) { "`${it.groupValues[1]}`" }
+    
+    // Restore block LaTeX with custom marker
+    blockMatches.forEach { match ->
+        val placeholder = "%%%LATEX_BLOCK_${match.range.first}%%%"
+        val latex = match.groupValues[1].trim()
+        processed = processed.replace(placeholder, "\n%%%LATEXBLOCK%%%\n$latex\n%%%ENDLATEX%%%\n")
+    }
+    
+    return processed
 }
 
 private fun parseMarkdown(markdown: String): List<MdBlock> {
@@ -133,7 +177,15 @@ private fun parseMarkdown(markdown: String): List<MdBlock> {
     while (node != null) {
         when (node) {
             is Heading -> blocks.add(MdBlock.Heading(node.level, collectInlines(node)))
-            is Paragraph -> blocks.addAll(blocksFromParagraph(node))
+            is Paragraph -> {
+                val text = extractTextFromNode(node)
+                if (text.trim().startsWith("%%%LATEXBLOCK%%%")) {
+                    val latex = text.replace("%%%LATEXBLOCK%%%", "").replace("%%%ENDLATEX%%%", "").trim()
+                    blocks.add(MdBlock.LatexBlock(latex))
+                } else {
+                    blocks.addAll(blocksFromParagraph(node))
+                }
+            }
             is BulletList -> blocks.add(MdBlock.BulletList(collectListItems(node)))
             is OrderedList -> blocks.add(MdBlock.OrderedList(node.startNumber, collectListItems(node)))
             is FencedCodeBlock -> blocks.add(MdBlock.CodeBlock(node.literal))
@@ -142,6 +194,18 @@ private fun parseMarkdown(markdown: String): List<MdBlock> {
         node = node.next
     }
     return blocks
+}
+
+private fun extractTextFromNode(node: Node): String {
+    val sb = StringBuilder()
+    var child: Node? = node.firstChild
+    while (child != null) {
+        if (child is MdText) {
+            sb.append(child.literal)
+        }
+        child = child.next
+    }
+    return sb.toString()
 }
 
 private fun blocksFromParagraph(paragraph: Paragraph): List<MdBlock> {
@@ -256,6 +320,7 @@ private sealed interface MdBlock {
     data class OrderedList(val start: Int, val items: List<List<MdInline>>) : MdBlock
     data class Image(val path: String, val title: String?) : MdBlock
     data class CodeBlock(val text: String) : MdBlock
+    data class LatexBlock(val latex: String) : MdBlock
     data object Divider : MdBlock
 }
 

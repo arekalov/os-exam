@@ -20,6 +20,20 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    flavorDimensions += "device"
+    productFlavors {
+        create("wear") {
+            dimension = "device"
+            applicationIdSuffix = ".wear"
+            versionNameSuffix = "-wear"
+        }
+        create("mobile") {
+            dimension = "device"
+            applicationIdSuffix = ".mobile"
+            versionNameSuffix = "-mobile"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -57,9 +71,10 @@ dependencies {
     implementation(libs.hilt.navigation.compose)
     implementation(libs.navigation.compose)
     implementation(libs.commonmark)
-    implementation(libs.wear.compose.material3)
-    implementation(libs.wear.compose.foundation)
-    implementation(libs.wear.compose.navigation)
+    implementation(libs.jlatexmath.android)
+    "wearImplementation"(libs.wear.compose.material3)
+    "wearImplementation"(libs.wear.compose.foundation)
+    "wearImplementation"(libs.wear.compose.navigation)
     kapt(libs.hilt.compiler)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

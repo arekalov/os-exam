@@ -1,5 +1,8 @@
 package com.arekalov.osexam.ui.navigation
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -16,6 +19,8 @@ import com.arekalov.osexam.ui.screens.ImageViewerScreen
 import com.arekalov.osexam.ui.screens.TicketDetailScreen
 import com.arekalov.osexam.ui.screens.TicketListScreen
 
+private const val ANIMATION_DURATION = 150
+
 @Composable
 fun AppNavHost() {
     val navController = rememberSwipeDismissableNavController()
@@ -24,7 +29,11 @@ fun AppNavHost() {
         navController = navController,
         startDestination = Routes.LIST
     ) {
-        composable(Routes.LIST) {
+        composable(
+            route = Routes.LIST,
+            enterTransition = { fadeIn(animationSpec = tween(ANIMATION_DURATION)) },
+            exitTransition = { fadeOut(animationSpec = tween(ANIMATION_DURATION)) }
+        ) {
             val viewModel: TicketListViewModel = hiltViewModel()
             LaunchedEffect(viewModel) {
                 viewModel.effect.collect { effect ->
@@ -39,7 +48,9 @@ fun AppNavHost() {
         }
         composable(
             route = Routes.DETAIL,
-            arguments = listOf(navArgument("number") { type = NavType.StringType })
+            arguments = listOf(navArgument("number") { type = NavType.StringType }),
+            enterTransition = { fadeIn(animationSpec = tween(ANIMATION_DURATION)) },
+            exitTransition = { fadeOut(animationSpec = tween(ANIMATION_DURATION)) }
         ) {
             val viewModel: TicketDetailViewModel = hiltViewModel()
             LaunchedEffect(viewModel) {
@@ -55,7 +66,9 @@ fun AppNavHost() {
         }
         composable(
             route = Routes.IMAGE,
-            arguments = listOf(navArgument("path") { type = NavType.StringType })
+            arguments = listOf(navArgument("path") { type = NavType.StringType }),
+            enterTransition = { fadeIn(animationSpec = tween(ANIMATION_DURATION)) },
+            exitTransition = { fadeOut(animationSpec = tween(ANIMATION_DURATION)) }
         ) { backStackEntry ->
             val path = backStackEntry.arguments?.getString("path").orEmpty()
             ImageViewerScreen(
