@@ -1,13 +1,19 @@
 package com.arekalov.osexam.ui.widgets
 
 import android.graphics.BitmapFactory
+import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
@@ -28,9 +34,19 @@ fun AssetImage(
     val bitmapState by produceState<ImageBitmap?>(initialValue = null, key1 = path) {
         value = withContext(Dispatchers.IO) {
             runCatching {
+                Log.d("AssetImage", "Loading image: $path")
                 context.assets.open(path).use { input ->
-                    BitmapFactory.decodeStream(input)?.asImageBitmap()
+                    val bitmap = BitmapFactory.decodeStream(input)
+                    if (bitmap != null) {
+                        Log.d("AssetImage", "Image loaded successfully: $path (${bitmap.width}x${bitmap.height})")
+                        bitmap.asImageBitmap()
+                    } else {
+                        Log.e("AssetImage", "Failed to decode image: $path")
+                        null
+                    }
                 }
+            }.onFailure { e ->
+                Log.e("AssetImage", "Error loading image: $path", e)
             }.getOrNull()
         }
     }
@@ -51,6 +67,17 @@ fun AssetImage(
             contentScale = contentScale
         )
     } else {
-        Box(modifier = modifier)
+        Box(
+            modifier = modifier
+                .background(MaterialTheme.colorScheme.errorContainer)
+                .padding(8.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "Image not found: $path",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onErrorContainer
+            )
+        }
     }
 }
