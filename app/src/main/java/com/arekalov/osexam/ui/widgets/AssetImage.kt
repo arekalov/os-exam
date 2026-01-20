@@ -11,8 +11,11 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.produceState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
@@ -23,6 +26,12 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+sealed class ImageLoadState {
+    object Loading : ImageLoadState()
+    data class Success(val bitmap: ImageBitmap) : ImageLoadState()
+    data class Error(val message: String) : ImageLoadState()
+}
+
 @Composable
 fun AssetImage(
     path: String,
@@ -31,53 +40,64 @@ fun AssetImage(
     limitSize: Boolean = true
 ) {
     val context = LocalContext.current
-    val bitmapState by produceState<ImageBitmap?>(initialValue = null, key1 = path) {
-        value = withContext(Dispatchers.IO) {
+    var loadState by remember(path) { mutableStateOf<ImageLoadState>(ImageLoadState.Loading) }
+    
+    LaunchedEffect(path) {
+        loadState = ImageLoadState.Loading
+        loadState = withContext(Dispatchers.IO) {
             runCatching {
                 Log.d("AssetImage", "Loading image: $path")
                 context.assets.open(path).use { input ->
                     val bitmap = BitmapFactory.decodeStream(input)
                     if (bitmap != null) {
                         Log.d("AssetImage", "Image loaded successfully: $path (${bitmap.width}x${bitmap.height})")
-                        bitmap.asImageBitmap()
+                        ImageLoadState.Success(bitmap.asImageBitmap())
                     } else {
                         Log.e("AssetImage", "Failed to decode image: $path")
-                        null
+                        ImageLoadState.Error("Failed to decode image")
                     }
                 }
             }.onFailure { e ->
                 Log.e("AssetImage", "Error loading image: $path", e)
-            }.getOrNull()
+            }.getOrElse { 
+                ImageLoadState.Error("Image not found: $path")
+            }
         }
     }
 
-    val bitmap = bitmapState
-    if (bitmap != null) {
-        val sizeModifier = if (limitSize) {
-            Modifier
-                .widthIn(max = 200.dp)
-                .heightIn(max = 200.dp)
-        } else {
-            Modifier
+    when (val state = loadState) {
+        is ImageLoadState.Loading -> {
+            // Пустой бокс для состояния загрузки - ничего не показываем
+            Box(modifier = modifier)
         }
-        Image(
-            bitmap = bitmap,
-            contentDescription = null,
-            modifier = modifier.then(sizeModifier),
-            contentScale = contentScale
-        )
-    } else {
-        Box(
-            modifier = modifier
-                .background(MaterialTheme.colorScheme.errorContainer)
-                .padding(8.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "Image not found: $path",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onErrorContainer
+        is ImageLoadState.Success -> {
+            val sizeModifier = if (limitSize) {
+                Modifier
+                    .widthIn(max = 200.dp)
+                    .heightIn(max = 200.dp)
+            } else {
+                Modifier
+            }
+            Image(
+                bitmap = state.bitmap,
+                contentDescription = null,
+                modifier = modifier.then(sizeModifier),
+                contentScale = contentScale
             )
+        }
+        is ImageLoadState.Error -> {
+            Box(
+                modifier = modifier
+                    .background(MaterialTheme.colorScheme.errorContainer)
+                    .padding(8.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = state.message,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onErrorContainer
+                )
+            }
         }
     }
 }
