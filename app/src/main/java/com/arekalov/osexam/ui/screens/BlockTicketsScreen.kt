@@ -13,37 +13,31 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.arekalov.osexam.domain.model.TicketSummary
-import com.arekalov.osexam.presentation.list.TicketListIntent
-import com.arekalov.osexam.presentation.list.TicketListState
-import com.arekalov.osexam.presentation.list.TicketListViewModel
-import com.arekalov.osexam.ui.theme.OsexamTheme
+import com.arekalov.osexam.presentation.blocktickets.BlockTicketsIntent
+import com.arekalov.osexam.presentation.blocktickets.BlockTicketsState
+import com.arekalov.osexam.presentation.blocktickets.BlockTicketsViewModel
 
 @Composable
-fun TicketListScreen(
-    viewModel: TicketListViewModel
+fun BlockTicketsScreen(
+    viewModel: BlockTicketsViewModel
 ) {
     val state by viewModel.state.collectAsState()
-    TicketListContent(
+    BlockTicketsContent(
         state = state,
         onTicketClick = { number ->
-            viewModel.onIntent(TicketListIntent.TicketClicked(number))
-        },
-        onBlocksClick = {
-            viewModel.onIntent(TicketListIntent.BlocksClicked)
+            viewModel.onIntent(BlockTicketsIntent.TicketClicked(number))
         }
     )
 }
 
 @Composable
-private fun TicketListContent(
-    state: TicketListState,
-    onTicketClick: (Int) -> Unit,
-    onBlocksClick: () -> Unit
+private fun BlockTicketsContent(
+    state: BlockTicketsState,
+    onTicketClick: (Int) -> Unit
 ) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -61,18 +55,16 @@ private fun TicketListContent(
                     vertical = 16.dp
                 )
             ) {
-                item {
-                    Card(
-                        onClick = onBlocksClick,
-                        modifier = Modifier.padding(bottom = 12.dp)
-                    ) {
+                if (state.blockTitle.isNotEmpty()) {
+                    item {
                         Text(
-                            text = "📚 Блоки по темам",
+                            text = "Блок ${state.blockId}: ${state.blockTitle}",
                             style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier.padding(16.dp)
+                            modifier = Modifier.padding(bottom = 16.dp)
                         )
                     }
                 }
+                
                 items(state.tickets) { ticket ->
                     Card(
                         onClick = { onTicketClick(ticket.number) },
@@ -101,23 +93,5 @@ private fun TicketListContent(
                 )
             }
         }
-    }
-}
-
-@Preview(name = "Ticket List Mobile")
-@Composable
-private fun PreviewTicketList() {
-    OsexamTheme {
-        TicketListContent(
-            state = TicketListState(
-                isLoading = false,
-                tickets = listOf(
-                    TicketSummary(1, "Архитектура компьютерных систем. Архитектура Фон-Ндская архитектура"),
-                    TicketSummary(2, "Общая организация процессора, памяти, организация прерываний")
-                )
-            ),
-            onTicketClick = {},
-            onBlocksClick = {}
-        )
     }
 }

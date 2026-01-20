@@ -34,6 +34,11 @@ class TicketListViewModel @Inject constructor(
                     _effect.send(TicketListEffect.NavigateToTicket(intent.number))
                 }
             }
+            TicketListIntent.BlocksClicked -> {
+                viewModelScope.launch {
+                    _effect.send(TicketListEffect.NavigateToBlocks)
+                }
+            }
         }
     }
 
