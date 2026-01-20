@@ -78,32 +78,10 @@ fun MarkdownRenderer(
                     )
                 }
                 is MdBlock.BulletList -> {
-                    block.items.forEach { item ->
-                        Row(modifier = Modifier.padding(vertical = 2.dp)) {
-                            Text(
-                                text = "• ",
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                            Text(
-                                text = buildInlineString(item),
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
-                    }
+                    RenderBulletList(block.items, 0)
                 }
                 is MdBlock.OrderedList -> {
-                    block.items.forEachIndexed { index, item ->
-                        Row(modifier = Modifier.padding(vertical = 2.dp)) {
-                            Text(
-                                text = "${block.start + index}. ",
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                            Text(
-                                text = buildInlineString(item),
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
-                    }
+                    RenderOrderedList(block.items, block.start, 0)
                 }
                 is MdBlock.Image -> {
                     AssetImage(
@@ -169,6 +147,60 @@ private fun preprocessLatex(markdown: String): String {
     return processed
 }
 
+@Composable
+private fun RenderBulletList(items: List<MdListItem>, level: Int) {
+    items.forEach { item ->
+        Row(modifier = Modifier.padding(start = (level * 16).dp, top = 2.dp, bottom = 2.dp)) {
+            Text(
+                text = "• ",
+                style = MaterialTheme.typography.bodySmall
+            )
+            Column {
+                if (item.inlines.isNotEmpty()) {
+                    Text(
+                        text = buildInlineString(item.inlines),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+                if (item.nestedList != null) {
+                    when (item.nestedList) {
+                        is MdBlock.BulletList -> RenderBulletList(item.nestedList.items, level + 1)
+                        is MdBlock.OrderedList -> RenderOrderedList(item.nestedList.items, item.nestedList.start, level + 1)
+                        else -> {}
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun RenderOrderedList(items: List<MdListItem>, start: Int, level: Int) {
+    items.forEachIndexed { index, item ->
+        Row(modifier = Modifier.padding(start = (level * 16).dp, top = 2.dp, bottom = 2.dp)) {
+            Text(
+                text = "${start + index}. ",
+                style = MaterialTheme.typography.bodySmall
+            )
+            Column {
+                if (item.inlines.isNotEmpty()) {
+                    Text(
+                        text = buildInlineString(item.inlines),
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+                if (item.nestedList != null) {
+                    when (item.nestedList) {
+                        is MdBlock.BulletList -> RenderBulletList(item.nestedList.items, level + 1)
+                        is MdBlock.OrderedList -> RenderOrderedList(item.nestedList.items, item.nestedList.start, level + 1)
+                        else -> {}
+                    }
+                }
+            }
+        }
+    }
+}
+
 private fun parseMarkdown(markdown: String): List<MdBlock> {
     val parser = Parser.builder().build()
     val document = parser.parse(markdown)
@@ -186,8 +218,8 @@ private fun parseMarkdown(markdown: String): List<MdBlock> {
                     blocks.addAll(blocksFromParagraph(node))
                 }
             }
-            is BulletList -> blocks.add(MdBlock.BulletList(collectListItems(node)))
-            is OrderedList -> blocks.add(MdBlock.OrderedList(node.startNumber, collectListItems(node)))
+            is BulletList -> blocks.add(MdBlock.BulletList(collectNestedListItems(node)))
+            is OrderedList -> blocks.add(MdBlock.OrderedList(node.startNumber, collectNestedListItems(node)))
             is FencedCodeBlock -> blocks.add(MdBlock.CodeBlock(node.literal))
             is ThematicBreak -> blocks.add(MdBlock.Divider)
         }
@@ -228,6 +260,52 @@ private fun blocksFromParagraph(paragraph: Paragraph): List<MdBlock> {
         blocks.add(MdBlock.Paragraph(buffer.toList()))
     }
     return blocks
+}
+
+private fun collectNestedListItems(list: BulletList): List<MdListItem> {
+    val items = mutableListOf<MdListItem>()
+    var child: Node? = list.firstChild
+    while (child != null) {
+        if (child is ListItem) {
+            val inlines = mutableListOf<MdInline>()
+            var nestedList: MdBlock? = null
+            var itemChild: Node? = child.firstChild
+            while (itemChild != null) {
+                when (itemChild) {
+                    is Paragraph -> inlines.addAll(collectInlines(itemChild))
+                    is BulletList -> nestedList = MdBlock.BulletList(collectNestedListItems(itemChild))
+                    is OrderedList -> nestedList = MdBlock.OrderedList(itemChild.startNumber, collectNestedListItems(itemChild))
+                }
+                itemChild = itemChild.next
+            }
+            items.add(MdListItem(inlines, nestedList))
+        }
+        child = child.next
+    }
+    return items
+}
+
+private fun collectNestedListItems(list: OrderedList): List<MdListItem> {
+    val items = mutableListOf<MdListItem>()
+    var child: Node? = list.firstChild
+    while (child != null) {
+        if (child is ListItem) {
+            val inlines = mutableListOf<MdInline>()
+            var nestedList: MdBlock? = null
+            var itemChild: Node? = child.firstChild
+            while (itemChild != null) {
+                when (itemChild) {
+                    is Paragraph -> inlines.addAll(collectInlines(itemChild))
+                    is BulletList -> nestedList = MdBlock.BulletList(collectNestedListItems(itemChild))
+                    is OrderedList -> nestedList = MdBlock.OrderedList(itemChild.startNumber, collectNestedListItems(itemChild))
+                }
+                itemChild = itemChild.next
+            }
+            items.add(MdListItem(inlines, nestedList))
+        }
+        child = child.next
+    }
+    return items
 }
 
 private fun collectListItems(list: BulletList): List<List<MdInline>> {
@@ -316,13 +394,18 @@ private fun buildInlineString(inlines: List<MdInline>): AnnotatedString = buildA
 private sealed interface MdBlock {
     data class Heading(val level: Int, val inlines: List<MdInline>) : MdBlock
     data class Paragraph(val inlines: List<MdInline>) : MdBlock
-    data class BulletList(val items: List<List<MdInline>>) : MdBlock
-    data class OrderedList(val start: Int, val items: List<List<MdInline>>) : MdBlock
+    data class BulletList(val items: List<MdListItem>) : MdBlock
+    data class OrderedList(val start: Int, val items: List<MdListItem>) : MdBlock
     data class Image(val path: String, val title: String?) : MdBlock
     data class CodeBlock(val text: String) : MdBlock
     data class LatexBlock(val latex: String) : MdBlock
     data object Divider : MdBlock
 }
+
+private data class MdListItem(
+    val inlines: List<MdInline>,
+    val nestedList: MdBlock? = null
+)
 
 private sealed interface MdInline {
     data class Text(val text: String) : MdInline
