@@ -6,15 +6,23 @@ title: Шпаргалка команд.
 ## 🗒️ Шпаргалка PostgreSQL
 **Пользователи и роли:**
 ```sql
-CREATE USER name                          -- создать пользователя (с LOGIN)
+CREATE USER name                                    -- создать пользователя (с LOGIN)
 
-CREATE ROLE name                          -- создать роль (без LOGIN)
+CREATE ROLE name                                    -- создать роль (без LOGIN)
 
-CREATE USER name WITH PASSWORD 'pass'     -- с паролем
+CREATE USER name WITH PASSWORD 'pass'               -- с паролем
 
-CREATE ROLE name WITH LOGIN               -- роль с возможностью логина
+CREATE USER name WITH CREATEROLE                    -- может создавать роли/пользователей
 
-DROP USER name                            -- удалить пользователя
+CREATE USER name WITH CREATEDB                      -- может создавать БД
+
+CREATE USER name WITH SUPERUSER                     -- суперюзер (всё можно)
+
+CREATE USER name WITH PASSWORD 'pass' CREATEROLE    -- пароль + может создавать юзеров
+
+CREATE ROLE name WITH LOGIN                         -- роль с возможностью логина
+
+DROP USER name                                      -- удалить пользователя
 ```
 
 **Роли как группы:**
