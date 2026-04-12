@@ -64,7 +64,7 @@ private fun TicketListContent(
                 items(state.tickets) { ticket ->
                     Card(
                         onClick = { onTicketClick(ticket.number) },
-                        modifier = Modifier.padding(bottom = 12.dp)
+                        modifier = Modifier.padding(bottom = 4.dp)
                     ) {
                         Text(
                             text = "${ticket.number}. ${ticket.title}",
