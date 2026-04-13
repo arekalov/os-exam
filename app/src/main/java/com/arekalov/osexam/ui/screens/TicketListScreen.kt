@@ -61,22 +61,10 @@ private fun TicketListContent(
                     vertical = 16.dp
                 )
             ) {
-                item {
-                    Card(
-                        onClick = onBlocksClick,
-                        modifier = Modifier.padding(bottom = 12.dp)
-                    ) {
-                        Text(
-                            text = "📚 Блоки по темам",
-                            style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier.padding(16.dp)
-                        )
-                    }
-                }
                 items(state.tickets) { ticket ->
                     Card(
                         onClick = { onTicketClick(ticket.number) },
-                        modifier = Modifier.padding(bottom = 12.dp)
+                        modifier = Modifier.padding(bottom = 4.dp)
                     ) {
                         Text(
                             text = "${ticket.number}. ${ticket.title}",

@@ -46,8 +46,9 @@ fun AssetImage(
         loadState = ImageLoadState.Loading
         loadState = withContext(Dispatchers.IO) {
             runCatching {
-                Log.d("AssetImage", "Loading image: $path")
-                context.assets.open(path).use { input ->
+                val normalizedPath = path.removePrefix("./")
+                Log.d("AssetImage", "Loading image: $normalizedPath")
+                context.assets.open(normalizedPath).use { input ->
                     val bitmap = BitmapFactory.decodeStream(input)
                     if (bitmap != null) {
                         Log.d("AssetImage", "Image loaded successfully: $path (${bitmap.width}x${bitmap.height})")
