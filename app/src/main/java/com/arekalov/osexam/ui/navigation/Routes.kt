@@ -5,6 +5,7 @@ import android.net.Uri
 object Routes {
     const val LIST = "list"
     const val BLOCKS = "blocks"
+    const val SEARCH = "search"
     const val BLOCK_TICKETS = "block/{blockId}/tickets"
     const val DETAIL = "detail/{number}"
     const val IMAGE = "image/{path}"

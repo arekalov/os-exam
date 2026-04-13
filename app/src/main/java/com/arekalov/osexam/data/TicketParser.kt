@@ -28,9 +28,16 @@ class TicketParser {
             throw IllegalArgumentException("title не указан")
         }
 
+        val keywords = header["keywords"]
+            ?.split(",")
+            ?.map { it.trim() }
+            ?.filter { it.isNotBlank() }
+            ?: emptyList()
+
         return Ticket(
             number = number,
             title = title,
+            keywords = keywords,
             content = content
         )
     }

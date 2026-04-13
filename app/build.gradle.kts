@@ -18,6 +18,9 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("boolean", "FEATURE_SEARCH", project.findProperty("FEATURE_SEARCH")?.toString() ?: "false")
+        buildConfigField("boolean", "FEATURE_SORT_MODE", project.findProperty("FEATURE_SORT_MODE")?.toString() ?: "false")
     }
 
     flavorDimensions += "device"
@@ -52,6 +55,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 

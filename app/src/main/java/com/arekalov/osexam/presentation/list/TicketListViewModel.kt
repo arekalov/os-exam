@@ -2,6 +2,7 @@ package com.arekalov.osexam.presentation.list
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.arekalov.osexam.domain.model.TicketSummary
 import com.arekalov.osexam.domain.usecase.GetTicketListUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -34,10 +35,14 @@ class TicketListViewModel @Inject constructor(
                     _effect.send(TicketListEffect.NavigateToTicket(intent.number))
                 }
             }
-            TicketListIntent.BlocksClicked -> {
+            TicketListIntent.SearchClicked -> {
                 viewModelScope.launch {
-                    _effect.send(TicketListEffect.NavigateToBlocks)
+                    _effect.send(TicketListEffect.NavigateToSearch)
                 }
+            }
+            TicketListIntent.ToggleSort -> {
+                val newSort = if (_state.value.sortMode == SortMode.BY_NUMBER) SortMode.BY_TITLE else SortMode.BY_NUMBER
+                _state.update { it.copy(sortMode = newSort, tickets = sortTickets(it.tickets, newSort)) }
             }
         }
     }
@@ -47,11 +52,18 @@ class TicketListViewModel @Inject constructor(
             _state.update { it.copy(isLoading = true, error = null) }
             runCatching { getTicketListUseCase() }
                 .onSuccess { tickets ->
-                    _state.update { it.copy(isLoading = false, tickets = tickets) }
+                    val sorted = sortTickets(tickets, _state.value.sortMode)
+                    _state.update { it.copy(isLoading = false, tickets = sorted) }
                 }
                 .onFailure { error ->
                     _state.update { it.copy(isLoading = false, error = error.message) }
                 }
         }
     }
+
+    private fun sortTickets(tickets: List<TicketSummary>, mode: SortMode): List<TicketSummary> =
+        when (mode) {
+            SortMode.BY_NUMBER -> tickets.sortedBy { it.number }
+            SortMode.BY_TITLE -> tickets.sortedBy { it.title }
+        }
 }

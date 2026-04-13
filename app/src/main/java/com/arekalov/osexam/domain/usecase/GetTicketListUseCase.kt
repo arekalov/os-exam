@@ -9,6 +9,6 @@ class GetTicketListUseCase(
     suspend operator fun invoke(): List<TicketSummary> {
         return repository.getTickets()
             .sortedBy { it.number }
-            .map { TicketSummary(it.number, it.title) }
+            .map { TicketSummary(it.number, it.title, it.keywords) }
     }
 }
