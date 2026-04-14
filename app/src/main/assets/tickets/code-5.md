@@ -4,8 +4,7 @@ title: Конфигурация Spring Boot с профилями dev/prod
 keywords: Конфигурация Spring Boot с профилями dev/prod — профиль dev с БД на сервере aqua/helios и heap 2GB, профиль prod с БД на боевом сервере и heap 16GB
 ---
 
-### Спам-бот Telegram — REST контроллер отправки сообщений конкретному пользователю, случайному пулу пользователей и всему сообществу
-
+### Конфигурация Spring Boot с профилями dev/prod — профиль dev с БД на сервере aqua/helios и heap 2GB, профиль prod с БД на боевом сервере и heap 16GB
 
 #### application.yaml
 ```yaml
