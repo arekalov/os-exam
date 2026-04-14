@@ -34,8 +34,8 @@ public class MoneyController {
     sender.setBalance(sender.getBalance() - amount);
     receiver.setBalance(receiver.getBalance() + amount);
 
-    userRepository.save(sender)
-    userRepository.save(receiver)
+    userRepository.save(sender);
+    userRepository.save(receiver);
   }
 }
 ```
