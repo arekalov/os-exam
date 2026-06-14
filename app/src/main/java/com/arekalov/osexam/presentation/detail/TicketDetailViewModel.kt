@@ -3,6 +3,7 @@ package com.arekalov.osexam.presentation.detail
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.arekalov.osexam.domain.model.TicketSource
 import com.arekalov.osexam.domain.usecase.GetTicketUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -27,6 +28,9 @@ class TicketDetailViewModel @Inject constructor(
     private val ticketNumber: Int? =
         savedStateHandle.get<String>(ARG_NUMBER)?.toIntOrNull()
 
+    private val ticketSource: TicketSource =
+        TicketSource.fromRouteValue(savedStateHandle.get<String>(ARG_SOURCE))
+
     init {
         load()
     }
@@ -47,7 +51,7 @@ class TicketDetailViewModel @Inject constructor(
                 return@launch
             }
             _state.update { it.copy(isLoading = true, error = null) }
-            runCatching { getTicketUseCase(number) }
+            runCatching { getTicketUseCase(number, ticketSource) }
                 .onSuccess { ticket ->
                     if (ticket == null) {
                         _state.update { it.copy(isLoading = false, error = "Билет не найден") }
@@ -63,5 +67,6 @@ class TicketDetailViewModel @Inject constructor(
 
     companion object {
         const val ARG_NUMBER = "number"
+        const val ARG_SOURCE = "source"
     }
 }

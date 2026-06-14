@@ -10,17 +10,15 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.arekalov.osexam.presentation.blocks.BlocksEffect
-import com.arekalov.osexam.presentation.blocks.BlocksViewModel
-import com.arekalov.osexam.presentation.blocktickets.BlockTicketsEffect
-import com.arekalov.osexam.presentation.blocktickets.BlockTicketsViewModel
+import com.arekalov.osexam.domain.model.TicketSource
 import com.arekalov.osexam.presentation.detail.TicketDetailEffect
 import com.arekalov.osexam.presentation.detail.TicketDetailViewModel
 import com.arekalov.osexam.presentation.list.TicketListEffect
 import com.arekalov.osexam.presentation.list.TicketListViewModel
-import com.arekalov.osexam.ui.screens.BlocksScreen
-import com.arekalov.osexam.ui.screens.BlockTicketsScreen
+import com.arekalov.osexam.presentation.practice.PracticeListEffect
+import com.arekalov.osexam.presentation.practice.PracticeListViewModel
 import com.arekalov.osexam.ui.screens.ImageViewerScreen
+import com.arekalov.osexam.ui.screens.PracticeListScreen
 import com.arekalov.osexam.ui.screens.TicketDetailScreen
 import com.arekalov.osexam.ui.screens.TicketListScreen
 
@@ -40,49 +38,37 @@ fun AppNavHost() {
                         is TicketListEffect.NavigateToTicket -> {
                             navController.navigate(Routes.detail(effect.number))
                         }
-                        is TicketListEffect.NavigateToBlocks -> {
-                            navController.navigate(Routes.BLOCKS)
+                        is TicketListEffect.NavigateToPractice -> {
+                            navController.navigate(Routes.PRACTICE_LIST)
                         }
                     }
                 }
             }
             TicketListScreen(viewModel = viewModel)
         }
-        
-        composable(Routes.BLOCKS) {
-            val viewModel: BlocksViewModel = hiltViewModel()
+
+        composable(Routes.PRACTICE_LIST) {
+            val viewModel: PracticeListViewModel = hiltViewModel()
             LaunchedEffect(viewModel) {
                 viewModel.effect.collect { effect ->
                     when (effect) {
-                        is BlocksEffect.NavigateToBlock -> {
-                            navController.navigate(Routes.blockTickets(effect.blockId))
+                        is PracticeListEffect.NavigateToTicket -> {
+                            navController.navigate(
+                                Routes.detail(effect.number, TicketSource.PRACTICE)
+                            )
                         }
                     }
                 }
             }
-            BlocksScreen(viewModel = viewModel)
+            PracticeListScreen(viewModel = viewModel)
         }
-        
-        composable(
-            route = Routes.BLOCK_TICKETS,
-            arguments = listOf(navArgument("blockId") { type = NavType.StringType })
-        ) {
-            val viewModel: BlockTicketsViewModel = hiltViewModel()
-            LaunchedEffect(viewModel) {
-                viewModel.effect.collect { effect ->
-                    when (effect) {
-                        is BlockTicketsEffect.NavigateToTicket -> {
-                            navController.navigate(Routes.detail(effect.number))
-                        }
-                    }
-                }
-            }
-            BlockTicketsScreen(viewModel = viewModel)
-        }
-        
+
         composable(
             route = Routes.DETAIL,
-            arguments = listOf(navArgument("number") { type = NavType.StringType })
+            arguments = listOf(
+                navArgument("source") { type = NavType.StringType },
+                navArgument("number") { type = NavType.StringType }
+            )
         ) {
             val viewModel: TicketDetailViewModel = hiltViewModel()
             LaunchedEffect(viewModel) {
@@ -96,6 +82,7 @@ fun AppNavHost() {
             }
             TicketDetailScreen(viewModel = viewModel)
         }
+
         composable(
             route = Routes.IMAGE,
             arguments = listOf(navArgument("path") { type = NavType.StringType }),

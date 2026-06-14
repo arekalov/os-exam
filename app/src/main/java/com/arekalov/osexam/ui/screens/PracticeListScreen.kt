@@ -13,30 +13,32 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.arekalov.osexam.domain.model.TicketSummary
-import com.arekalov.osexam.presentation.blocktickets.BlockTicketsIntent
-import com.arekalov.osexam.presentation.blocktickets.BlockTicketsState
-import com.arekalov.osexam.presentation.blocktickets.BlockTicketsViewModel
+import com.arekalov.osexam.presentation.practice.PracticeListIntent
+import com.arekalov.osexam.presentation.practice.PracticeListState
+import com.arekalov.osexam.presentation.practice.PracticeListViewModel
+import com.arekalov.osexam.ui.theme.OsexamTheme
 
 @Composable
-fun BlockTicketsScreen(
-    viewModel: BlockTicketsViewModel
+fun PracticeListScreen(
+    viewModel: PracticeListViewModel
 ) {
     val state by viewModel.state.collectAsState()
-    BlockTicketsContent(
+    PracticeListContent(
         state = state,
         onTicketClick = { number ->
-            viewModel.onIntent(BlockTicketsIntent.TicketClicked(number))
+            viewModel.onIntent(PracticeListIntent.TicketClicked(number))
         }
     )
 }
 
 @Composable
-private fun BlockTicketsContent(
-    state: BlockTicketsState,
+private fun PracticeListContent(
+    state: PracticeListState,
     onTicketClick: (Int) -> Unit
 ) {
     Scaffold(
@@ -55,16 +57,6 @@ private fun BlockTicketsContent(
                     vertical = 16.dp
                 )
             ) {
-                if (state.blockTitle.isNotEmpty()) {
-                    item {
-                        Text(
-                            text = "Блок ${state.blockId}: ${state.blockTitle}",
-                            style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier.padding(bottom = 16.dp)
-                        )
-                    }
-                }
-                
                 items(state.tickets) { ticket ->
                     Card(
                         onClick = { onTicketClick(ticket.number) },
@@ -93,5 +85,22 @@ private fun BlockTicketsContent(
                 )
             }
         }
+    }
+}
+
+@Preview(name = "Practice List Mobile")
+@Composable
+private fun PreviewPracticeList() {
+    OsexamTheme {
+        PracticeListContent(
+            state = PracticeListState(
+                isLoading = false,
+                tickets = listOf(
+                    TicketSummary(1, "Планировщик в cron"),
+                    TicketSummary(8, "BPMN в Camunda Modeler")
+                )
+            ),
+            onTicketClick = {}
+        )
     }
 }
