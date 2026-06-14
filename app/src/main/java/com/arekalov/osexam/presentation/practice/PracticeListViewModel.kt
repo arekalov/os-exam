@@ -1,4 +1,4 @@
-package com.arekalov.osexam.presentation.list
+package com.arekalov.osexam.presentation.practice
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -14,30 +14,25 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @HiltViewModel
-class TicketListViewModel @Inject constructor(
+class PracticeListViewModel @Inject constructor(
     private val getTicketListUseCase: GetTicketListUseCase
 ) : ViewModel() {
-    private val _state = MutableStateFlow(TicketListState())
-    val state: StateFlow<TicketListState> = _state
+    private val _state = MutableStateFlow(PracticeListState())
+    val state: StateFlow<PracticeListState> = _state
 
-    private val _effect = Channel<TicketListEffect>(Channel.BUFFERED)
+    private val _effect = Channel<PracticeListEffect>(Channel.BUFFERED)
     val effect = _effect.receiveAsFlow()
 
     init {
         load()
     }
 
-    fun onIntent(intent: TicketListIntent) {
+    fun onIntent(intent: PracticeListIntent) {
         when (intent) {
-            TicketListIntent.Refresh -> load()
-            is TicketListIntent.TicketClicked -> {
+            PracticeListIntent.Refresh -> load()
+            is PracticeListIntent.TicketClicked -> {
                 viewModelScope.launch {
-                    _effect.send(TicketListEffect.NavigateToTicket(intent.number))
-                }
-            }
-            TicketListIntent.PracticeClicked -> {
-                viewModelScope.launch {
-                    _effect.send(TicketListEffect.NavigateToPractice)
+                    _effect.send(PracticeListEffect.NavigateToTicket(intent.number))
                 }
             }
         }
@@ -46,7 +41,7 @@ class TicketListViewModel @Inject constructor(
     private fun load() {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
-            runCatching { getTicketListUseCase(TicketSource.THEORY) }
+            runCatching { getTicketListUseCase(TicketSource.PRACTICE) }
                 .onSuccess { tickets ->
                     _state.update { it.copy(isLoading = false, tickets = tickets) }
                 }

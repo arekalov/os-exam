@@ -33,8 +33,8 @@ fun TicketListScreen(
         onTicketClick = { number ->
             viewModel.onIntent(TicketListIntent.TicketClicked(number))
         },
-        onBlocksClick = {
-            viewModel.onIntent(TicketListIntent.BlocksClicked)
+        onPracticeClick = {
+            viewModel.onIntent(TicketListIntent.PracticeClicked)
         }
     )
 }
@@ -43,7 +43,7 @@ fun TicketListScreen(
 private fun TicketListContent(
     state: TicketListState,
     onTicketClick: (Int) -> Unit,
-    onBlocksClick: () -> Unit
+    onPracticeClick: () -> Unit
 ) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -63,11 +63,11 @@ private fun TicketListContent(
             ) {
                 item {
                     Card(
-                        onClick = onBlocksClick,
+                        onClick = onPracticeClick,
                         modifier = Modifier.padding(bottom = 12.dp)
                     ) {
                         Text(
-                            text = "📚 Блоки по темам",
+                            text = "🛠 Практические задания",
                             style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier.padding(16.dp)
                         )
@@ -112,12 +112,12 @@ private fun PreviewTicketList() {
             state = TicketListState(
                 isLoading = false,
                 tickets = listOf(
-                    TicketSummary(1, "Архитектура компьютерных систем. Архитектура Фон-Ндская архитектура"),
+                    TicketSummary(1, "Архитектура компьютерных систем. Архитектура Фон-Неймана"),
                     TicketSummary(2, "Общая организация процессора, памяти, организация прерываний")
                 )
             ),
             onTicketClick = {},
-            onBlocksClick = {}
+            onPracticeClick = {}
         )
     }
 }

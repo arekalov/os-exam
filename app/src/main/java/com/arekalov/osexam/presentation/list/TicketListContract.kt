@@ -5,12 +5,12 @@ import com.arekalov.osexam.domain.model.TicketSummary
 sealed interface TicketListIntent {
     object Refresh : TicketListIntent
     data class TicketClicked(val number: Int) : TicketListIntent
-    object BlocksClicked : TicketListIntent
+    object PracticeClicked : TicketListIntent
 }
 
 sealed interface TicketListEffect {
     data class NavigateToTicket(val number: Int) : TicketListEffect
-    object NavigateToBlocks : TicketListEffect
+    object NavigateToPractice : TicketListEffect
 }
 
 data class TicketListState(
