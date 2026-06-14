@@ -36,7 +36,7 @@ object FontSizes {
     // - обычного текста (параграфы)
     // - элементов списков (маркированные и нумерованные)
     // - блоков кода
-    val bodySmallFontSize: TextUnit = 10.sp
+    val bodySmallFontSize: TextUnit = 11.sp
     val bodySmallLineHeight: TextUnit = 12.sp
     val bodySmallLetterSpacing: TextUnit = 0.4.sp
 }
