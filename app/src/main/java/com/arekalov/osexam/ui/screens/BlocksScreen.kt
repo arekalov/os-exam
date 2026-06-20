@@ -1,5 +1,6 @@
 package com.arekalov.osexam.ui.screens
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -12,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.arekalov.osexam.domain.model.TicketBlock
@@ -41,19 +43,37 @@ private fun BlocksContent(
         containerColor = MaterialTheme.colorScheme.background,
         contentColor = MaterialTheme.colorScheme.onBackground
     ) { paddingValues ->
-        LazyColumn(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues),
-            contentPadding = PaddingValues(
-                horizontal = 16.dp,
-                vertical = 16.dp
-            )
+                .padding(paddingValues)
         ) {
-            items(state.blocks) { block ->
-                BlockCard(
-                    block = block,
-                    onClick = { onBlockClick(block.id) }
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(
+                    horizontal = 16.dp,
+                    vertical = 16.dp
+                )
+            ) {
+                items(state.blocks) { block ->
+                    BlockCard(
+                        block = block,
+                        onClick = { onBlockClick(block.id) }
+                    )
+                }
+            }
+
+            if (state.isLoading) {
+                Text(
+                    text = "Загрузка...",
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            } else if (state.error != null) {
+                Text(
+                    text = state.error ?: "",
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.align(Alignment.Center)
                 )
             }
         }
@@ -70,7 +90,7 @@ private fun BlockCard(
         modifier = Modifier.padding(bottom = 12.dp)
     ) {
         Text(
-            text = "${block.id}. ${block.title}",
+            text = block.summary,
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.padding(16.dp)
         )

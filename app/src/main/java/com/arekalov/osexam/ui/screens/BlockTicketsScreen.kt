@@ -58,7 +58,7 @@ private fun BlockTicketsContent(
                 if (state.blockTitle.isNotEmpty()) {
                     item {
                         Text(
-                            text = "Блок ${state.blockId}: ${state.blockTitle}",
+                            text = state.blockTitle,
                             style = MaterialTheme.typography.titleMedium,
                             modifier = Modifier.padding(bottom = 16.dp)
                         )

@@ -11,5 +11,7 @@ sealed interface BlocksEffect {
 }
 
 data class BlocksState(
-    val blocks: List<TicketBlock> = emptyList()
+    val isLoading: Boolean = true,
+    val blocks: List<TicketBlock> = emptyList(),
+    val error: String? = null
 )

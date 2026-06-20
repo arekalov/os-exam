@@ -14,5 +14,6 @@ data class TicketSummary(
 data class TicketBlock(
     val id: Int,
     val title: String,
-    val ticketNumbers: List<Int>
+    val ticketNumbers: List<Int>,
+    val summary: String = title
 )

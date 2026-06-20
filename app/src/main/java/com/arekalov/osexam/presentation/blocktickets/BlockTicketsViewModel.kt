@@ -3,7 +3,7 @@ package com.arekalov.osexam.presentation.blocktickets
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.arekalov.osexam.domain.model.TICKET_BLOCKS
+import com.arekalov.osexam.domain.repository.TicketBlocksRepository
 import com.arekalov.osexam.domain.usecase.GetTicketListUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -17,10 +17,11 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class BlockTicketsViewModel @Inject constructor(
     private val getTicketListUseCase: GetTicketListUseCase,
+    private val ticketBlocksRepository: TicketBlocksRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
     private val blockId: Int = savedStateHandle.get<String>("blockId")?.toIntOrNull() ?: 1
-    
+
     private val _state = MutableStateFlow(BlockTicketsState(blockId = blockId))
     val state: StateFlow<BlockTicketsState> = _state
 
@@ -44,24 +45,24 @@ class BlockTicketsViewModel @Inject constructor(
     private fun load() {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true, error = null) }
-            
-            val block = TICKET_BLOCKS.find { it.id == blockId }
+
+            val block = ticketBlocksRepository.getBlock(blockId)
             if (block == null) {
-                _state.update { it.copy(isLoading = false, error = "Блок не найден") }
+                _state.update { it.copy(isLoading = false, error = "Билет не найден") }
                 return@launch
             }
-            
+
             runCatching { getTicketListUseCase() }
                 .onSuccess { allTickets ->
                     val blockTickets = allTickets.filter { ticket ->
                         ticket.number in block.ticketNumbers
                     }
-                    _state.update { 
+                    _state.update {
                         it.copy(
-                            isLoading = false, 
+                            isLoading = false,
                             blockTitle = block.title,
                             tickets = blockTickets
-                        ) 
+                        )
                     }
                 }
                 .onFailure { error ->
